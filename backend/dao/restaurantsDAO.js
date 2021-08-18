@@ -34,5 +34,25 @@ export default class RestaurantsDAO {
         }
 
         let cursor
+
+        try {
+            cursor = await restaurants
+                .find(query)
+        } catch (e) {
+            console.error(`Unable to issue find command, ${e}`)
+            return { restaurantsList : [], totalNumRestauarants: 0 }
+        }
+
+        const displayCursor = cursor.limit(restaurantsPerPage).skip(restaurantsPerPage * page)
+
+        try {
+            const restaurantsList = await displayCursor.toArray()
+            const totalNumRestauarants = page === 0 ? await restaurants.countDocuments(query) : 0
+
+            return { restaurantsList, totalNumRestauarants }
+        } catch (error) {
+            console.error(`Unable to convert cursor to array or problem counting documents, ${e}`)
+            return { restaurantsList : [], totalNumRestauarants: 0 }
+        }
     }
 }
