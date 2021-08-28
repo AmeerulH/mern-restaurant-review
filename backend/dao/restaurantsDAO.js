@@ -1,4 +1,6 @@
 let restaurants // use to store a reference to the database
+import mongodb from "mongodb"
+const ObjectId = mongodb.ObjectId
 
 export default class RestaurantsDAO {
     // initially connect to the database once server starts
@@ -53,6 +55,61 @@ export default class RestaurantsDAO {
         } catch (error) {
             console.error(`Unable to convert cursor to array or problem counting documents, ${e}`)
             return { restaurantsList : [], totalNumRestauarants: 0 }
+        }
+    }
+
+    static async getRestaurantById(id) {
+        try {
+            const pipeline = [ // help match different collections together
+                {
+                    $match: {
+                        _id: new ObjectId(id),
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "reviews",
+                        let: {
+                            id: "$_id",
+                        },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: {
+                                        $eq: ["$restaurant_id", "$$id"],
+                                    },
+                                },
+                            },
+                            {
+                                $sort: {
+                                    date: -1,
+                                },
+                            },
+                        ],
+                        as: "reviews",
+                    },
+                },
+                {
+                    $addFields: {
+                        reviws: "$reviews",
+                    },
+                },
+            ]
+            return await restaurants.aggregate(pipeline).next()
+        } catch (e) {
+            console.error(`Something went wrong in getRestaurantByID: ${e}`)
+            throw e
+        }
+    }
+
+    static async getCuisines() {
+        let cuisines = []
+        try {
+            cuisines = await restaurants.distinct("cuisine")
+            return cuisines
+        } catch (e) {
+            console.error(`Unable to get cuisines, ${e}`)
+            return cuisines
         }
     }
 }
