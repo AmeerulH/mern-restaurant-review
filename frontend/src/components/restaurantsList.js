@@ -9,12 +9,6 @@ const RestaurantsList = props => {
     const [searchCuisine, setSearchCuisine] = useState("");
     const [cuisines, setCuisines] = useState(["All Cuisines"]);
 
-    // After rendering
-    useEffect(() => {
-        retrieveRestaurants();
-        retrieveCuisines();
-    }, []);
-
     const onChangeSearchName = e => {
         const searchName = e.target.value;
         setSearchName(searchName);
@@ -30,11 +24,12 @@ const RestaurantsList = props => {
         setSearchCuisine(searchCuisine);
     };
 
-    const retrieveRestaurants = () => {
-        RestaurantDataService.getAll()
+    const retrieveRestaurants = async () => {
+        await RestaurantDataService.getAll()
             .then(response => {
-                console.log(response.data);
+                // console.log(response.data);
                 setRestaurants(response.data.restaurants);
+                console.log(restaurants);
             })
             .catch(e => {
                 console.log(e);
@@ -68,7 +63,7 @@ const RestaurantsList = props => {
     };
 
     const findByName = () => {
-        find(searchName, "Name");
+        find(searchName, "name");
     };
 
     const findByZip = () => {
@@ -82,6 +77,12 @@ const RestaurantsList = props => {
             find(searchCuisine, "cuisine")
         }
     };
+
+    // After rendering
+    useEffect(() => {
+        retrieveRestaurants();
+        retrieveCuisines();
+    }, []);
 
     return (
         <div>
@@ -126,7 +127,7 @@ const RestaurantsList = props => {
                     <select onChange={onChangeSearchCuisine}>
                         {cuisines.map(cuisine => {
                             return (
-                                <option value={cuisine}> {cuisine.substr(0, 20)} </option>
+                                <option key={cuisine} value={cuisine}> {cuisine.substr(0, 20)} </option>
                             )
                         })}
                     </select>
@@ -145,7 +146,7 @@ const RestaurantsList = props => {
                 {restaurants.map((restaurant) => {
                     const address = `${restaurant.address.building} ${restaurant.address.street}, ${restaurant.address.zipcode}`;
                     return (
-                        <div className="col-lg-4 pb-1">
+                        <div key={restaurant._id} className="col-lg-4 pb-1">
                             <div className="card">
                                 <div className="card-body">
                                     <h5 className="card-title">{restaurant.name}</h5>
@@ -162,7 +163,7 @@ const RestaurantsList = props => {
                                 </div>
                             </div>
                         </div>
-                    );
+                    )
                 })}
             </div>
         </div>
